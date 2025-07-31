@@ -1,2 +1,13 @@
-# word_endnote_extractor
-A simple R tool that unzips a Word (.docx) file, pulls each endnote’s text along with the sentence that immediately precedes its reference in the document, and spits out a clean, consecutive list (with Roman numerals) in a UTF-8 CSV you can open in Excel.
+# DocxEndnoteExtractor
+
+A lightweight R script to extract endnote text **and** the immediately preceding sentence (context) from Microsoft Word (`.docx`) documents.
+
+---
+
+## 🔍 Features
+
+- **Unzip once**: Extracts both `document.xml` and `endnotes.xml` from a `.docx` ZIP container.
+- **Context capture**: Finds every `<w:endnoteReference>` in the main document, then pulls the last complete sentence before each marker.
+- **Endnote text**: Parses the endnote bodies, converts IDs to lowercase Roman numerals.
+- **Clean CSV**: Outputs a UTF-8, Excel-friendly CSV with BOM so curly quotes, “§” symbols, etc., render correctly.
+- **Re-indexed**: Renumbers endnotes consecutively (1,2,3…) regardless of Word’s internal IDs.
