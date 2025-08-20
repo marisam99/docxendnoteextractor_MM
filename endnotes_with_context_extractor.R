@@ -9,7 +9,7 @@
 
 # 0. CHANGE PATH TO YOUR WORD FILE ----------------------------------------------------------------
 # Point this at your .docx:
-docx_path <- "/path/to/your/document.docx" # Adjust this path
+docx_path <- file.choose() # Choose path
 
 # 1. Packages ----------------------------------------------------------------
 library(xml2)    # parse & query XML
@@ -112,8 +112,11 @@ extract_endnotes_with_context <- function(docx_path) {
 # Run the combined extractor:
 endnotes_with_context <- extract_endnotes_with_context(docx_path)
 
+# Build a Desktop path that works on both Windows and Mac
+desktop_path <- file.path(normalizePath("~"), "Desktop")
+
 # Write out to CSV
 write_excel_csv(
   endnotes_with_context,
-  file = "~/Desktop/endnotes_with_context.csv"
+  file = file.path(desktop_path, "endnotes_with_context.csv")
 )
