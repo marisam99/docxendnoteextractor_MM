@@ -7,6 +7,10 @@
 #  – Returns a tibble: number | roman | endnote | context_sentence
 # --------------------------------------------------------------------------
 
+# 0. CHANGE PATH TO YOUR WORD FILE ----------------------------------------------------------------
+# Point this at your .docx:
+docx_path <- "/path/to/your/document.docx" # Adjust this path
+
 # 1. Packages ----------------------------------------------------------------
 library(xml2)    # parse & query XML
 library(dplyr)   # mutate, arrange, native pipe |>
@@ -104,14 +108,11 @@ extract_endnotes_with_context <- function(docx_path) {
   combined
 }
 
-# 3. Example usage ----------------------------------------------------------
-# Point this at your .docx:
-docx_path <- "/path/to/your/document.docx" # Adjust this path
-
+# 3. Run extractor and Save Output ----------------------------------------------------------
 # Run the combined extractor:
 endnotes_with_context <- extract_endnotes_with_context(docx_path)
 
-# Optional: write out to CSV
+# Write out to CSV
 write_excel_csv(
   endnotes_with_context,
   file = "~/Desktop/endnotes_with_context.csv"
