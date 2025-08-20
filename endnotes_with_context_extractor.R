@@ -112,8 +112,22 @@ extract_endnotes_with_context <- function(docx_path) {
 # Run the combined extractor:
 endnotes_with_context <- extract_endnotes_with_context(docx_path)
 
-# Build a Desktop path that works on both Windows and Mac
-desktop_path <- file.path(normalizePath("~"), "Desktop")
+# Build a Desktop path that works on both Windows and Mac (does not incl. OneDrive)
+desktop_path <- tryCatch({
+  # Try to find desktop
+  path <- file.path(Sys.getenv("HOME"), "Desktop")
+  if (!dir.exists(path)) {
+    path <- file.path(Sys.getenv("USERPROFILE"), "Desktop")
+  }
+  if (!dir.exists(path)) {
+    stop("Desktop not found")
+  }
+  path
+}, error = function(e) {
+  # Fallback to current working directory
+  message("Could not find Desktop. Saving to current directory.")
+  getwd()
+})
 
 # Write out to CSV
 write_excel_csv(
