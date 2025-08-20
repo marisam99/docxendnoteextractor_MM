@@ -24,7 +24,7 @@ A lightweight R script to extract endnote text **and** the immediately preceding
 
 2. **Source the script**
 ```r
-source("extract_endnotes_with_context.R")
+source("endnote_with_context_extractor.R")
 ```
 
 ---
