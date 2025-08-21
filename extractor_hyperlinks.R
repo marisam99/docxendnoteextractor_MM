@@ -10,7 +10,6 @@
 
 # 0. SETUP: CHANGE THIS AS NEEDED ----------------------------------------------
 output_file <- "AIFP_measurement_fact_check.csv"
-# docx_path <- "C:/Users/Marisa Mission/OneDrive - BW/2025 AIFP Year-Long AI Funder Collaborative/WIP/Measurement/2025-08-05 Measurement draft.docx"
 
 # 1. Packages ------------------------------------------------------------------
 library(xml2)    # parse & query XML
