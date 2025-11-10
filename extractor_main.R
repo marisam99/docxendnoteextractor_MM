@@ -9,10 +9,6 @@
 #  – Returns a tibble: number | context_sentence | source_link | page_ref | full_endnote
 # --------------------------------------------------------------------------
 
-# 0. SETUP: CHANGE THIS AS NEEDED ----------------------------------------------
-output_file <- "AIFP_measurement_fact_check.csv"
-# docx_path <- "C:/Users/Marisa Mission/OneDrive - BW/2025 AIFP Year-Long AI Funder Collaborative/WIP/Measurement/2025-08-05 Measurement draft.docx"
-
 # 1. Load packages ------------------------------------------------------------------
 library(xml2)    # parse & query XML
 library(tidyr)   # unnest()
@@ -23,8 +19,10 @@ library(stringr) # str_squish(), str_split()
 library(utils)   # unzip(), unlink()
 library(readr)   # write_excel_csv() for UTF-8 CSV
 library(here)    # here()
+library(tcltk)   # tk_getSaveFile() for save dialog
+library(tools)   # file_path_sans_ext()
 
-# 2. Import helpers ------------------------------------------------------------
+# 2. Import helpers -----------------------------------------------------------
 source(here("helpers.R"), local = TRUE, encoding = "UTF-8")
 
 # 3. Define main function
@@ -139,8 +137,28 @@ docx_path <- file.choose()
 extracted_info <- full_extractor(docx_path)
 
 # 5. Save output -----------------------------------------------------------
-write_excel_csv(
-  extracted_info,
-  file = file.path(getwd(), output_file)
-)
-message("Results saved to: ", file.path(getwd(), output_file))
+# Default filename based on input
+default_name <- paste0("extracted_", file_path_sans_ext(basename(docx_path)), ".csv")
+
+# Try to open save dialog
+save_path <- tryCatch({
+  path <- tk_getSaveFile(
+    title = "Save extracted endnotes",
+    defaultextension = ".csv",
+    initialfile = default_name,
+    filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"
+  )
+  as.character(path)
+}, error = function(e) {
+  # Fallback if tcltk not available
+  message("Save dialog not available. Saving to working directory.")
+  file.path(getwd(), default_name)
+})
+
+# Save if path provided (user didn't cancel)
+if (save_path != "") {
+  write_excel_csv(extracted_info, file = save_path)
+  message("Results saved to: ", save_path)
+} else {
+  message("Save cancelled by user")
+}
