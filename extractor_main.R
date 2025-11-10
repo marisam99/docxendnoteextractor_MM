@@ -29,7 +29,25 @@ source(here("helpers.R"), local = TRUE, encoding = "UTF-8")
 
 # 3. Define main function
 full_extractor <- function(docx_path) {
-  # a) Extract context sentences -----------------------------------------------
+  # a) Setup: Unzip and read XML files ----------------------------------------
+  temp_dir <- tempfile("docx_unzip_")
+  dir.create(temp_dir)
+  on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
+
+  unzip(zipfile = docx_path, exdir = temp_dir)
+
+  # Paths to the XML files
+  doc_xml      <- file.path(temp_dir, "word", "document.xml")
+  endnotes_xml <- file.path(temp_dir, "word", "endnotes.xml")
+
+  # Read and namespace
+  doc_main  <- read_xml(doc_xml)
+  ns_main   <- xml_ns(doc_main)
+
+  doc_notes <- read_xml(endnotes_xml)
+  ns_notes  <- xml_ns(doc_notes)
+
+  # b) Extract context sentences -----------------------------------------------
   refs <- xml_find_all(doc_main, ".//w:endnoteReference", ns_main)
   
   context_df <- tibble(
@@ -61,7 +79,7 @@ full_extractor <- function(docx_path) {
       })
     )
   
-  # b) Extract endnotes --------------------------------------------------------
+  # c) Extract endnotes --------------------------------------------------------
   notes <- xml_find_all(
     doc_notes,
     ".//w:endnote[not(@w:type) and number(@w:id) > 0]",
@@ -77,20 +95,20 @@ full_extractor <- function(docx_path) {
     str_squish()
   }
   
-  # c) Extract hyperlinks ------------------------------------------------------
+  # d) Extract hyperlinks ------------------------------------------------------
   rels_map <- read_endnote_rels(temp_dir)
   hypers <- purrr::map(notes, ~ extract_hyperlinks(.x, ns_notes, rels_map))
 
-  # d) Build initial endnotes --------------------------------------------------
+  # e) Build initial endnotes --------------------------------------------------
   endnotes_df <- tibble(
     number  = ids,
     full_endnote = vapply(notes, get_note_text, character(1)),
     hyperlinks = hypers
   )
   
-  # e) Join the two dataframes, add page references, and clean things up -------
+  # f) Join the two dataframes, add page references, and clean things up -------
   final_df <- endnotes_df |>
-    # un-nest hyperlinks if there are multiple in 1 endnote 
+    # un-nest hyperlinks if there are multiple in 1 endnote
     unnest_longer(hyperlinks, values_to = "source_link", keep_empty = TRUE) |>
     # find page numbers for each source
     mutate(page_ref = map2_chr(full_endnote, source_link, get_pages_by_source)) |>
@@ -98,43 +116,18 @@ full_extractor <- function(docx_path) {
     left_join(context_df, by = "number") |>
     # re-order things
     select(number, context_sentence, source_link, page_ref, full_endnote)
-  
-  # f) Cleanup ---------------------------------------------------------------
-  unlink(temp_dir, recursive = TRUE)
-  
-  # g) Return ---------------------------------------------------------------
+
+  # g) Return (cleanup happens automatically via on.exit()) -------------------
   final_df
 }
 
-# 3. Run extraction --------------------------------------------------------
-  # a) Read in the file:
-    docx_path <- file.choose() # Choose path
-    
-    # (i) Unzip .docx into a temp folder
-    temp_dir <- tempfile("docx_unzip_")
-    dir.create(temp_dir)
-    unzip(zipfile = docx_path, exdir = temp_dir)
-    
-    # (ii) Paths to the two XMLs 
-    doc_xml      <- file.path(temp_dir, "word", "document.xml")
-    endnotes_xml <- file.path(temp_dir, "word", "endnotes.xml")
-    
-    # (iii)) Read and namespace 
-    doc_main  <- read_xml(doc_xml)
-    ns_main   <- xml_ns(doc_main)
-    
-    doc_notes <- read_xml(endnotes_xml)
-    ns_notes  <- xml_ns(doc_notes)
+# 4. Run extraction --------------------------------------------------------
+docx_path <- file.choose()
+extracted_info <- full_extractor(docx_path)
 
-  # b) Run the extractor:
-  extracted_info <- full_extractor(docx_path)
-
-# 4. Save output ---------------------------------------------------------------
-save_path <- getwd()
-
-# Write out to CSV
+# 5. Save output -----------------------------------------------------------
 write_excel_csv(
   extracted_info,
-  file = file.path(save_path, output_file)
+  file = file.path(getwd(), output_file)
 )
-message("Results saved to your working directory. Be sure to copy that file to your project folder!")
+message("Results saved to: ", file.path(getwd(), output_file))
