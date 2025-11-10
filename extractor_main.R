@@ -137,22 +137,25 @@ docx_path <- file.choose()
 extracted_info <- full_extractor(docx_path)
 
 # 5. Save output -----------------------------------------------------------
-# Default filename based on input
+# Default filename and path based on input file location
+input_dir <- dirname(docx_path)
 default_name <- paste0("extracted_", file_path_sans_ext(basename(docx_path)), ".csv")
+default_path <- file.path(input_dir, default_name)
 
 # Try to open save dialog
 save_path <- tryCatch({
   path <- tk_getSaveFile(
     title = "Save extracted endnotes",
+    initialdir = input_dir,
     defaultextension = ".csv",
     initialfile = default_name,
     filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"
   )
   as.character(path)
 }, error = function(e) {
-  # Fallback if tcltk not available
-  message("Save dialog not available. Saving to working directory.")
-  file.path(getwd(), default_name)
+  # Fallback if tcltk not available - save to same directory as input
+  message("Save dialog not available. Saving to input file directory.")
+  default_path
 })
 
 # Save if path provided (user didn't cancel)
