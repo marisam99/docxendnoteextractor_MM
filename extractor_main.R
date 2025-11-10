@@ -29,6 +29,11 @@ source(here("helpers.R"), local = TRUE, encoding = "UTF-8")
 
 # 3. Define main function
 full_extractor <- function(docx_path) {
+  # Validate it's a .docx file
+  if (!grepl("\\.docx$", docx_path, ignore.case = TRUE)) {
+    stop("File must be a .docx file, got: ", basename(docx_path))
+  }
+
   # a) Setup: Unzip and read XML files ----------------------------------------
   temp_dir <- tempfile("docx_unzip_")
   dir.create(temp_dir)
@@ -39,6 +44,14 @@ full_extractor <- function(docx_path) {
   # Paths to the XML files
   doc_xml      <- file.path(temp_dir, "word", "document.xml")
   endnotes_xml <- file.path(temp_dir, "word", "endnotes.xml")
+
+  # Check endnotes exist
+  if (!file.exists(endnotes_xml)) {
+    warning("No endnotes found in document")
+    return(tibble(number = integer(), context_sentence = character(),
+                  source_link = character(), page_ref = character(),
+                  full_endnote = character()))
+  }
 
   # Read and namespace
   doc_main  <- read_xml(doc_xml)
