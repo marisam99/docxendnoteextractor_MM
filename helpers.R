@@ -124,7 +124,7 @@
     pages
   }
 
-  # c) given a full endnote and one url, it will match the url to the correct citation and, 
+  # c) given a full endnote and one url, it will match the url to the correct citation and,
   #     if available, pull page numbers for that source
   get_pages_by_source <- function(endnote, url) {
     segments <- split_endnote(endnote)
@@ -132,4 +132,5 @@
     target_seg <- if(length(idx) && !is.na(idx)) segments[idx] else endnote
     # target_seg <- segments[idx]
     pages <- extract_pages(target_seg)
+    paste(pages, collapse = ", ")  # Collapse multiple page refs into single string
   }
