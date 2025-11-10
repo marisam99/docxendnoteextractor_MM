@@ -19,7 +19,6 @@ library(stringr) # str_squish(), str_split()
 library(utils)   # unzip(), unlink()
 library(readr)   # write_excel_csv() for UTF-8 CSV
 library(here)    # here()
-library(tcltk)   # tk_getSaveFile() for save dialog
 library(tools)   # file_path_sans_ext()
 
 # 2. Import helpers -----------------------------------------------------------
@@ -137,31 +136,10 @@ docx_path <- file.choose()
 extracted_info <- full_extractor(docx_path)
 
 # 5. Save output -----------------------------------------------------------
-# Default filename and path based on input file location
+# Auto-generate output filename and save to same directory as input
 input_dir <- dirname(docx_path)
-default_name <- paste0("extracted_", file_path_sans_ext(basename(docx_path)), ".csv")
-default_path <- file.path(input_dir, default_name)
+output_name <- paste0("extracted_", file_path_sans_ext(basename(docx_path)), ".csv")
+output_path <- file.path(input_dir, output_name)
 
-# Try to open save dialog
-save_path <- tryCatch({
-  path <- tk_getSaveFile(
-    title = "Save extracted endnotes",
-    initialdir = input_dir,
-    defaultextension = ".csv",
-    initialfile = default_name,
-    filetypes = "{ {CSV Files} {.csv} } { {All Files} * }"
-  )
-  as.character(path)
-}, error = function(e) {
-  # Fallback if tcltk not available - save to same directory as input
-  message("Save dialog not available. Saving to input file directory.")
-  default_path
-})
-
-# Save if path provided (user didn't cancel)
-if (save_path != "") {
-  write_excel_csv(extracted_info, file = save_path)
-  message("Results saved to: ", save_path)
-} else {
-  message("Save cancelled by user")
-}
+write_excel_csv(extracted_info, file = output_path)
+message("Results saved to: ", output_path)
